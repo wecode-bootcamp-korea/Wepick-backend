@@ -1,4 +1,13 @@
-from django.urls import path, include
+from django.urls import path
+from .views      import (
+    RegionView, 
+    CompanyListView, 
+    CompanyDetailView
+)
 
 urlpatterns = [
+    path('/region', RegionView.as_view(), name='region'),
+    path('/list', CompanyListView.as_view(), name='company_list'),
+    path('/<int:company_id>', CompanyDetailView.as_view(), name='company'),
+
 ]

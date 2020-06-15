@@ -5,6 +5,7 @@ from company.models  import Company
 
 class MainCategory(models.Model):
     name = models.CharField(max_length=200, unique=True)
+    image_url     = models.URLField(max_length=2000, null=True)
 
     class Meta:
         db_table = 'main_categories'
@@ -12,6 +13,7 @@ class MainCategory(models.Model):
 class SubCategory(models.Model):
     main_category = models.ForeignKey(MainCategory, on_delete=models.SET_NULL, null=True)
     name          = models.CharField(max_length=200, unique=True)
+    image_url     = models.URLField(max_length=2000, null=True)
 
     class Meta:
         db_table = 'sub_categories'
