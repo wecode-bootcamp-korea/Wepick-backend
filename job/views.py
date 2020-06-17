@@ -1,12 +1,16 @@
 import json
-from django.views   import View
-from django.http    import HttpResponse, JsonResponse
+from django.db.models import Q
+from django.views     import View
+from django.http      import HttpResponse, JsonResponse
+from django.db        import IntegrityError
 
-from company.models import Company
-from job.models     import (
+from company.models   import Company
+from job.models       import (
     MainCategory, 
     SubCategory, 
-    Job
+    Job,
+    Like,
+    Bookmark
 )
 
 
@@ -126,3 +130,82 @@ class JobDetailView(View):
         except Job.DoesNotExist:
             return JsonResponse({'message' : "INVALID_JOB"}, status=400)
 
+
+class LikeView(View):
+    def post(self, request):
+        try:
+            account_id = request.GET.get('account_id', None)
+            job_id     = request.GET.get('job_id', None)
+
+            if Like.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
+                like = Like.objects.get(Q(account_id = account_id)&Q(job_id = job_id))
+                
+                like.is_like = False if like.is_like else True                
+                like.save()
+            
+            else:
+                Like.objects.create(
+                    account_id = account_id,
+                    job_id     = job_id,
+                    is_like = True
+                )
+
+            return HttpResponse(status = 200)
+        except IntegrityError:
+            return JsonResponse({'message':'Invalid Account or Job'}, status=400)
+        except KeyError:
+            return HttpResponse(status = 400)
+    
+    def get(self, request):
+        try:
+            account_id = request.GET.get('account_id', None)
+            job_id     = request.GET.get('job_id', None)
+
+            if Like.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
+                like = Like.objects.get(Q(account_id = account_id)&Q(job_id = job_id))
+                return JsonResponse({'is_like' : like.is_like}, status = 200)
+            
+            return JsonResponse({'message' : "Invalid Like"}, status = 400)
+
+        except KeyError:
+            return HttpResponse(status = 400)
+
+
+class BookmarkView(View):
+    def post(self, request):
+        try:
+            account_id = request.GET.get('account_id', None)
+            job_id     = request.GET.get('job_id', None)
+
+            if Bookmark.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
+                bookmark = Bookmark.objects.get(Q(account_id = account_id)&Q(job_id = job_id))
+                
+                bookmark.is_bookmark = False if bookmark.is_bookmark else True                
+                bookmark.save()
+            
+            else:
+                Bookmark.objects.create(
+                    account_id = account_id,
+                    job_id     = job_id,
+                    is_bookmark = True
+                )
+
+            return HttpResponse(status = 200)
+        except IntegrityError:
+            return JsonResponse({'message':'Invalid Account or Job'}, status=400)
+        except KeyError:
+            return HttpResponse(status = 400)
+    
+    def get(self, request):
+        try:
+            account_id = request.GET.get('account_id', None)
+            job_id     = request.GET.get('job_id', None)
+
+            if Bookmark.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
+                bookmark = Bookmark.objects.get(Q(account_id = account_id)&Q(job_id = job_id))
+                return JsonResponse({'is_bookmark' : bookmark.is_bookmark}, status = 200)
+            
+            return JsonResponse({'message' : "Invalid Bookmark"}, status = 400)
+
+        except KeyError:
+            return HttpResponse(status = 400)

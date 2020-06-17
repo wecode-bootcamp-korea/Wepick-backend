@@ -1,15 +1,20 @@
 import json
-from django.test import TestCase, Client
+from django.test     import (
+    TestCase, 
+    Client, 
+    TransactionTestCase
+)
 
-from .models     import (
+from .models        import (
     Country, 
     Region, 
     Company, 
     Photo, 
-    News
+    News,
+    Follow
 )
-
-from job.models  import Job
+from account.models import Account
+from job.models     import Job
 
 
 class RegionView(TestCase):
@@ -145,4 +150,61 @@ class CompanyDetailTest(TestCase):
         response = client.get('/company?company=300')
         self.assertEqual(response.status_code, 404)
 
+class FollowTest(TransactionTestCase):
+    def setUp(self):
+        Account.objects.create(
+            id = 1,
+            email = 'kay@young.com'
+        )
+
+        Company.objects.create(
+            id = 1,
+            name = 'naver'
+        )
+
+        Company.objects.create(
+            id = 2,
+            name = 'kakao'
+        )
+
+        Follow.objects.create(
+            account_id = 1,
+            company_id = 1,
+            is_follow = True
+        )
+    
+    def tearDown(self): 
+        Account.objects.all().delete()
+        Company.objects.all().delete()
+        Follow.objects.all().delete()
+    
+    def test_follow_get_success(self):
+        client = Client()
+        response = client.get('/company/follow?account_id=1&company_id=1')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(),
+            {'is_follow' : True}
+        )
+    
+    def test_follow_get_fail(self):
+        client = Client()
+        response = client.get('/company/follow?account_id=1&company_id=100')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {'message' : "Invalid Follow"}
+        )
+
+    def test_follow_post_success(self):
+        client = Client()
+        
+        response = client.post('/company/follow?account_id=1&company_id=2')
+        self.assertEqual(response.status_code, 200)
+    
+    def test_follow_post_fail(self):
+        client = Client()
+        response = client.post('/company/follow?account_id=1&company_id=1000')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {'message':'Invalid Account or Company'}
+        )
 
