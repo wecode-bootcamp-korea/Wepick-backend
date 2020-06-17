@@ -1,13 +1,17 @@
 import json
-from django.views import View
-from django.http  import HttpResponse, JsonResponse
+
+from django.db.models import Q
+from django.views     import View
+from django.http      import HttpResponse, JsonResponse
+from django.db        import IntegrityError
 
 from company.models import (
     Country, 
     Region, 
     Company, 
     Photo, 
-    News
+    News,
+    Follow
 )
 
 from job.models     import (
@@ -15,6 +19,7 @@ from job.models     import (
     SubCategory, 
     Job
 )
+
 
 class RegionView(View):
     def get(self, request):
@@ -51,6 +56,7 @@ class CompanyListView(View):
     
         return JsonResponse({'data' : data}, status=200)
 
+
 class CompanyDetailView(View):
     def get(self, request, company_id):
         try:
@@ -85,3 +91,47 @@ class CompanyDetailView(View):
         
         except Company.DoesNotExist:
             return JsonResponse({'message' : "INVALID_COMPANY"}, status=400)
+
+
+class FollowView(View):
+
+    def post(self, request):
+        try:
+            account_id = request.GET.get('account_id', None)
+            company_id = request.GET.get('company_id', None)
+
+            if Follow.objects.filter(Q(account_id = account_id)&Q(company_id = company_id)).exists():
+                follow = Follow.objects.get(Q(account_id = account_id)&Q(company_id = company_id))
+                
+                follow.is_follow = False if follow.is_follow else True                
+                follow.save()
+            
+            else:
+                Follow.objects.create(
+                    account_id = account_id,
+                    company_id = company_id,
+                    is_follow = True
+                )
+
+            return HttpResponse(status = 200)            
+        except IntegrityError:
+            return JsonResponse({'message':'Invalid Account or Company'}, status=400)
+        except KeyError:
+            return HttpResponse(status = 400)
+    
+    def get(self, request):
+        try:
+            account_id = request.GET.get('account_id', None)
+            company_id = request.GET.get('company_id', None)
+
+            if Follow.objects.filter(Q(account_id = account_id)&Q(company_id = company_id)).exists():
+                follow = Follow.objects.get(Q(account_id = account_id)&Q(company_id = company_id))
+                return JsonResponse({'is_follow' : follow.is_follow}, status = 200)
+            
+            return JsonResponse({'message' : "Invalid Follow"}, status = 400)
+
+        except KeyError:
+            return HttpResponse(status = 400)
+
+
+

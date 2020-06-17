@@ -37,6 +37,7 @@ class Company(models.Model):
 class Follow(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE, default='')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, default='')
+    is_follow = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'follows'

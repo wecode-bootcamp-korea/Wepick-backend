@@ -1,5 +1,9 @@
 import json
-from django.test    import TestCase, Client
+from django.test    import (
+    TestCase, 
+    Client, 
+    TransactionTestCase
+)
 
 from company.models import (
     Country, 
@@ -12,8 +16,13 @@ from company.models import (
 from job.models     import (
     MainCategory, 
     SubCategory, 
-    Job
+    Job,
+    Like,
+    Bookmark
 )
+
+from account.models import Account
+
 
 class CategoryView(TestCase):
     def setUp(self):
@@ -342,3 +351,117 @@ class JobDetailView(TestCase):
         response = client.get('/job')
         self.assertEqual(response.status_code, 404)
 
+class LikeTest(TransactionTestCase):
+    def setUp(self):
+        Account.objects.create(
+            id = 1,
+            email = 'kay@young.com'
+        )
+
+        Job.objects.create(
+            id = 1,
+            name = 'frontend'
+        )
+
+        Job.objects.create(
+            id = 2,
+            name = 'backend'
+        )
+
+        Like.objects.create(
+            account_id = 1,
+            job_id = 1,
+            is_like = True
+        )
+    
+    def tearDown(self): 
+        Account.objects.all().delete()
+        Job.objects.all().delete()
+        Like.objects.all().delete()
+    
+    def test_like_get_success(self):
+        client = Client()
+        response = client.get('/job/like?account_id=1&job_id=1')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(),
+            {'is_like' : True}
+        )
+    
+    def test_like_get_fail(self):
+        client = Client()
+        response = client.get('/job/like?account_id=1&job_id=100')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {'message' : "Invalid Like"}
+        )
+
+    def test_like_post_success(self):
+        client = Client()
+        response = client.post('/job/like?account_id=1&job_id=2')
+        self.assertEqual(response.status_code, 200)
+    
+    def test_follow_post_fail(self):
+        client = Client()
+        response = client.post('/job/like?account_id=1&job_id=200')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {'message':'Invalid Account or Job'}
+        )
+
+
+class BookmarkTest(TransactionTestCase):
+    def setUp(self):
+        Account.objects.create(
+            id = 1,
+            email = 'kay@young.com'
+        )
+
+        Job.objects.create(
+            id = 1,
+            name = 'frontend'
+        )
+
+        Job.objects.create(
+            id = 2,
+            name = 'backend'
+        )
+
+        Bookmark.objects.create(
+            account_id = 1,
+            job_id = 1,
+            is_bookmark = True
+        )
+    
+    def tearDown(self): 
+        Account.objects.all().delete()
+        Job.objects.all().delete()
+        Bookmark.objects.all().delete()
+    
+    def test_bookmark_get_success(self):
+        client = Client()
+        response = client.get('/job/bookmark?account_id=1&job_id=1')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(),
+            {'is_bookmark' : True}
+        )
+    
+    def test_bookmark_get_fail(self):
+        client = Client()
+        response = client.get('/job/bookmark?account_id=1&job_id=100')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {'message' : "Invalid Bookmark"}
+        )
+
+    def test_bookmark_post_success(self):
+        client = Client()
+        response = client.post('/job/bookmark?account_id=1&job_id=2')
+        self.assertEqual(response.status_code, 200)
+    
+    def test_bookmark_post_fail(self):
+        client = Client()
+        response = client.post('/job/bookmark?account_id=1&job_id=200')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {'message':'Invalid Account or Job'}
+        )
