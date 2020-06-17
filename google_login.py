@@ -12,21 +12,20 @@ class GoogleLoginTest(TransactionTestCase):
 
     def setUp(self):
         bytes_pw    = bytes('123456', 'utf-8')
-
         Account.objects.create(
             email               = "abcd@abcd.com",
             password            = "123456",
             username            = "abcd",
             google_id           = "abcd@abcd.com"
         )
-
+    
     def tearDown(self):
         Account.objects.filter(email = "abcd@abcd.com").delete()
-          
+    
     @patch('account.views.requests')
     def test_account_google_account(self, mocked_requests):
         c = Client()
-
+        
         class MockedResponse:
             def json(self):
                 return {

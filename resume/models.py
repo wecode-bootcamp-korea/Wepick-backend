@@ -1,13 +1,17 @@
 from django.db import models
 
 class Resume(models.Model):
-    account          = models.ForeignKey('account.Account', on_delete = models.CASCADE)
-    title            = models.CharField(max_length=500)
-    introduction     = models.TextField(null = True)
-    created_at       = models.DateTimeField(auto_now_add=True)
-    updated_at       = models.DateTimeField(auto_now=True)
-    file_url         = models.CharField(max_length=2000)
-
+    account      = models.ForeignKey('account.Account', on_delete = models.CASCADE)
+    title        = models.CharField(max_length=500)
+    introduction = models.TextField(null = True)
+    created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
+    file_url     = models.CharField(max_length=2000)
+    work_experiences  = models.TextField(null = True)
+    educations        = models.TextField(null = True)
+    other_experiences = models.TextField(null = True)
+    languages         = models.TextField(null = True)
+    
     class Meta:
         db_table = 'resumes'
 
@@ -18,7 +22,6 @@ class WorkExperience(models.Model):
     comment      = models.TextField(null = True)
     start_date   = models.DateTimeField(null = True)
     end_date     = models.DateTimeField(null = True)
-    
     
     class Meta:
         db_table = 'work_experiences'
