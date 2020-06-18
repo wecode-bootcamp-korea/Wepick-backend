@@ -16,6 +16,9 @@ from .models        import (
 from account.models import Account
 from job.models     import Job
 
+import google_login
+google_login = google_login.GoogleLoginTest
+
 
 class RegionView(TestCase):
     def setUp(self):
@@ -152,11 +155,6 @@ class CompanyDetailTest(TestCase):
 
 class FollowTest(TransactionTestCase):
     def setUp(self):
-        Account.objects.create(
-            id = 1,
-            email = 'kay@young.com'
-        )
-
         Company.objects.create(
             id = 1,
             name = 'naver'
@@ -167,8 +165,11 @@ class FollowTest(TransactionTestCase):
             name = 'kakao'
         )
 
+        google_login.setUp(self)
+        account = Account.objects.get(google_id="abcd@abcd.com")
+
         Follow.objects.create(
-            account_id = 1,
+            account_id = account.id,
             company_id = 1,
             is_follow = True
         )
@@ -180,7 +181,9 @@ class FollowTest(TransactionTestCase):
     
     def test_follow_get_success(self):
         client = Client()
-        response = client.get('/company/follow?account_id=1&company_id=1')
+        access_token = google_login.test_account_google_account(self)
+        header       = {"HTTP_AUTHORIZATION":access_token}
+        response = client.get('/company/follow?company_id=1', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
             {'is_follow' : True}
@@ -188,7 +191,9 @@ class FollowTest(TransactionTestCase):
     
     def test_follow_get_fail(self):
         client = Client()
-        response = client.get('/company/follow?account_id=1&company_id=100')
+        access_token = google_login.test_account_google_account(self)
+        header       = {"HTTP_AUTHORIZATION":access_token}
+        response = client.get('/company/follow?company_id=100', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(),
             {'message' : "Invalid Follow"}
@@ -196,13 +201,16 @@ class FollowTest(TransactionTestCase):
 
     def test_follow_post_success(self):
         client = Client()
-        
-        response = client.post('/company/follow?account_id=1&company_id=2')
+        access_token = google_login.test_account_google_account(self)
+        header       = {"HTTP_AUTHORIZATION":access_token}
+        response = client.post('/company/follow?company_id=2', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 200)
     
     def test_follow_post_fail(self):
         client = Client()
-        response = client.post('/company/follow?account_id=1&company_id=1000')
+        access_token = google_login.test_account_google_account(self)
+        header       = {"HTTP_AUTHORIZATION":access_token}
+        response = client.post('/company/follow?company_id=1000', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(),
             {'message':'Invalid Account or Company'}

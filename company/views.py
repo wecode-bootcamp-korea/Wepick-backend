@@ -5,6 +5,7 @@ from django.views     import View
 from django.http      import HttpResponse, JsonResponse
 from django.db        import IntegrityError
 
+from account.views  import login_required
 from company.models import (
     Country, 
     Region, 
@@ -94,10 +95,11 @@ class CompanyDetailView(View):
 
 
 class FollowView(View):
-
+    @login_required
     def post(self, request):
+        account_id = request.user.id
+        
         try:
-            account_id = request.GET.get('account_id', None)
             company_id = request.GET.get('company_id', None)
 
             if Follow.objects.filter(Q(account_id = account_id)&Q(company_id = company_id)).exists():
@@ -119,9 +121,11 @@ class FollowView(View):
         except KeyError:
             return HttpResponse(status = 400)
     
+    @login_required
     def get(self, request):
+        #import pdb; pdb.set_trace()
         try:
-            account_id = request.GET.get('account_id', None)
+            account_id = request.user.id
             company_id = request.GET.get('company_id', None)
 
             if Follow.objects.filter(Q(account_id = account_id)&Q(company_id = company_id)).exists():

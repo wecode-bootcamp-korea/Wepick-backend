@@ -1,13 +1,13 @@
 from django.db import models
 
 class Resume(models.Model):
-    account      = models.ForeignKey('account.Account', on_delete = models.CASCADE)
-    title        = models.CharField(max_length=500)
-    introduction = models.TextField(null = True)
-    created_at   = models.DateTimeField(auto_now_add=True)
-    updated_at   = models.DateTimeField(auto_now=True)
-    file_url     = models.CharField(max_length=2000)
-    
+    account          = models.ForeignKey('account.Account', on_delete = models.CASCADE)
+    title            = models.CharField(max_length=500)
+    introduction     = models.TextField(null = True)
+    created_at       = models.DateTimeField(auto_now_add=True)
+    updated_at       = models.DateTimeField(auto_now=True)
+    file_url         = models.CharField(max_length=2000)
+
     class Meta:
         db_table = 'resumes'
 

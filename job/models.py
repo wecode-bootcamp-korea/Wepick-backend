@@ -58,6 +58,7 @@ class Apply(models.Model):
     job      = models.ForeignKey(Job, on_delete=models.CASCADE,default='')
     resume   = models.ForeignKey(Resume, on_delete=models.SET_NULL, null=True)
     is_apply = models.BooleanField(default=False)
+    created_at    = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'applies'

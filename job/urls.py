@@ -6,7 +6,8 @@ from .views      import (
     JobListCategoryView, 
     JobDetailView,
     LikeView,
-    BookmarkView
+    BookmarkView,
+    ApplyView
 )
 
 urlpatterns = [
@@ -16,6 +17,6 @@ urlpatterns = [
     path('/list/<int:sub_category_id>', JobListCategoryView.as_view(), name='job_list_category'),
     path('/<int:job_id>', JobDetailView.as_view(), name='job_detail'),
     path('/like', LikeView.as_view(), name='like'),
-    path('/bookmark', BookmarkView.as_view(), name='bookmark')
-
+    path('/bookmark', BookmarkView.as_view(), name='bookmark'),
+    path('/apply', ApplyView.as_view(), name='apply')
 ]

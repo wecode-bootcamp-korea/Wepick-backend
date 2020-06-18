@@ -18,10 +18,15 @@ from job.models     import (
     SubCategory, 
     Job,
     Like,
-    Bookmark
+    Bookmark,
+    Apply
 )
 
 from account.models import Account
+from resume.models  import Resume
+
+import google_login
+google_login = google_login.GoogleLoginTest
 
 
 class CategoryView(TestCase):
@@ -322,6 +327,7 @@ class JobDetailView(TestCase):
             'id' : 1,
             'sub_category_id' : 1,
             'name' : 'server 개발',
+            'company_id' : 1,
             'company' : 'wecode',
             'region' : 'seoul',
             'country' : 'korea',
@@ -353,11 +359,6 @@ class JobDetailView(TestCase):
 
 class LikeTest(TransactionTestCase):
     def setUp(self):
-        Account.objects.create(
-            id = 1,
-            email = 'kay@young.com'
-        )
-
         Job.objects.create(
             id = 1,
             name = 'frontend'
@@ -368,8 +369,11 @@ class LikeTest(TransactionTestCase):
             name = 'backend'
         )
 
+        google_login.setUp(self)
+        account = Account.objects.get(google_id="abcd@abcd.com")
+
         Like.objects.create(
-            account_id = 1,
+            account_id = account.id,
             job_id = 1,
             is_like = True
         )
@@ -381,7 +385,9 @@ class LikeTest(TransactionTestCase):
     
     def test_like_get_success(self):
         client = Client()
-        response = client.get('/job/like?account_id=1&job_id=1')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.get('/job/like?job_id=1', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
             {'is_like' : True}
@@ -389,7 +395,9 @@ class LikeTest(TransactionTestCase):
     
     def test_like_get_fail(self):
         client = Client()
-        response = client.get('/job/like?account_id=1&job_id=100')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.get('/job/like?job_id=100', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(),
             {'message' : "Invalid Like"}
@@ -397,12 +405,16 @@ class LikeTest(TransactionTestCase):
 
     def test_like_post_success(self):
         client = Client()
-        response = client.post('/job/like?account_id=1&job_id=2')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.post('/job/like?job_id=2', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 200)
     
-    def test_follow_post_fail(self):
+    def test_like_post_fail(self):
         client = Client()
-        response = client.post('/job/like?account_id=1&job_id=200')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.post('/job/like?job_id=200', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(),
             {'message':'Invalid Account or Job'}
@@ -411,11 +423,6 @@ class LikeTest(TransactionTestCase):
 
 class BookmarkTest(TransactionTestCase):
     def setUp(self):
-        Account.objects.create(
-            id = 1,
-            email = 'kay@young.com'
-        )
-
         Job.objects.create(
             id = 1,
             name = 'frontend'
@@ -426,8 +433,11 @@ class BookmarkTest(TransactionTestCase):
             name = 'backend'
         )
 
+        google_login.setUp(self)
+        account = Account.objects.get(google_id="abcd@abcd.com")
+
         Bookmark.objects.create(
-            account_id = 1,
+            account_id = account.id,
             job_id = 1,
             is_bookmark = True
         )
@@ -439,7 +449,9 @@ class BookmarkTest(TransactionTestCase):
     
     def test_bookmark_get_success(self):
         client = Client()
-        response = client.get('/job/bookmark?account_id=1&job_id=1')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.get('/job/bookmark?job_id=1', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
             {'is_bookmark' : True}
@@ -447,7 +459,9 @@ class BookmarkTest(TransactionTestCase):
     
     def test_bookmark_get_fail(self):
         client = Client()
-        response = client.get('/job/bookmark?account_id=1&job_id=100')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.get('/job/bookmark?job_id=100', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(),
             {'message' : "Invalid Bookmark"}
@@ -455,13 +469,64 @@ class BookmarkTest(TransactionTestCase):
 
     def test_bookmark_post_success(self):
         client = Client()
-        response = client.post('/job/bookmark?account_id=1&job_id=2')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.post('/job/bookmark?job_id=2', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 200)
     
     def test_bookmark_post_fail(self):
         client = Client()
-        response = client.post('/job/bookmark?account_id=1&job_id=200')
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.post('/job/bookmark?job_id=200', content_type='applications/json', **header)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(),
             {'message':'Invalid Account or Job'}
         )
+
+class ApplyTest(TransactionTestCase):
+    def setUp(self):
+        Job.objects.create(
+            id = 1,
+            name = 'frontend'
+        )
+
+        Job.objects.create(
+            id = 2,
+            name = 'backend'
+        )
+
+        google_login.setUp(self)
+        account = Account.objects.get(google_id="abcd@abcd.com")
+
+        Resume.objects.create(
+            id = 1,
+            account_id = account.id,
+            title = 'greate resume'  
+        )
+
+        Apply.objects.create(
+            account_id = account.id,
+            job_id = 1,
+            resume_id = 1,
+            is_apply = True
+        )
+    
+    def tearDown(self): 
+        Account.objects.all().delete()
+        Job.objects.all().delete()
+        Bookmark.objects.all().delete()
+    
+    def test_apply_get_success(self):
+        client = Client()
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.get('/job/apply?job_id=1', content_type='applications/json', **header)
+        self.assertEqual(response.status_code, 200)
+
+    def test_apply_post_success(self):
+        client = Client()
+        access_token = google_login.test_account_google_account(self)
+        header = {"HTTP_AUTHORIZATION":access_token}
+        response = client.post('/job/apply?job_id=2&resume_id=1', content_type='applications/json', **header)
+        self.assertEqual(response.status_code, 200)
