@@ -141,3 +141,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+ALGORITHM = my_settings.ALGORITHM
+ACCESS_TOKEN = my_settings.GOOGLE_ACCESS_TOKEN
