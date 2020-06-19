@@ -4,14 +4,18 @@ from django.views     import View
 from django.http      import HttpResponse, JsonResponse
 from django.db        import IntegrityError
 
+from account.views    import login_required
 from company.models   import Company
 from job.models       import (
     MainCategory, 
     SubCategory, 
     Job,
     Like,
-    Bookmark
+    Bookmark,
+    Apply
 )
+
+from account.models import Account
 
 
 class CategoryView(View):
@@ -70,7 +74,7 @@ class JobListView(View):
             'country'       : job.company.country.name,
             'reward_amount' : job.reward_amount,
             'thumbnail'     : job.company.thumbnail_url,
-            'likes'         : job.likes.count()
+            'likes'         : job.like_set.filter(is_like = True).count()
         } for job in jobs]
 
         return JsonResponse({'data' : data[offset:limit]}, status=200)
@@ -89,7 +93,7 @@ class JobListCategoryView(View):
                 'country'       : job.company.country.name,
                 'reward_amount' : job.reward_amount,
                 'thumbnail'     : job.company.thumbnail_url,
-                'likes'         : job.likes.count()
+                'likes'         : job.like_set.filter(is_like = True).count()
             } for job in jobs]
 
             return JsonResponse({'data' : data}, status=200)
@@ -108,12 +112,13 @@ class JobDetailView(View):
                 'id'              : job.id,
                 'sub_category_id' : job.sub_category.id,
                 'name'            : job.name,
+                'company_id'      : job.company.id,
                 'company'         : job.company.name,
                 'region'          : job.company.region.name,
                 'country'         : job.company.country.name,
                 'referer_amount'  : reward_amount,
                 'fereree_amount'  : reward_amount,
-                'likes'           : job.likes.count(),
+                'likes'           : job.like_set.filter(is_like = True).count(),
                 'article'         : job.article,
                 'deadline'        : job.deadline,
                 'location'        : job.company.location,
@@ -132,9 +137,11 @@ class JobDetailView(View):
 
 
 class LikeView(View):
+    
+    @login_required
     def post(self, request):
         try:
-            account_id = request.GET.get('account_id', None)
+            account_id = request.user.id
             job_id     = request.GET.get('job_id', None)
 
             if Like.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
@@ -156,9 +163,10 @@ class LikeView(View):
         except KeyError:
             return HttpResponse(status = 400)
     
+    @login_required
     def get(self, request):
         try:
-            account_id = request.GET.get('account_id', None)
+            account_id = request.user.id
             job_id     = request.GET.get('job_id', None)
 
             if Like.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
@@ -172,9 +180,10 @@ class LikeView(View):
 
 
 class BookmarkView(View):
-    def post(self, request):
+    @login_required
+    def post(self, request):  
         try:
-            account_id = request.GET.get('account_id', None)
+            account_id = request.user.id
             job_id     = request.GET.get('job_id', None)
 
             if Bookmark.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
@@ -196,9 +205,11 @@ class BookmarkView(View):
         except KeyError:
             return HttpResponse(status = 400)
     
+    @login_required
     def get(self, request):
         try:
-            account_id = request.GET.get('account_id', None)
+            account_id = request.user.id
+            #account_id = request.GET.get('account_id', None)
             job_id     = request.GET.get('job_id', None)
 
             if Bookmark.objects.filter(Q(account_id = account_id)&Q(job_id = job_id)).exists():
@@ -207,5 +218,45 @@ class BookmarkView(View):
             
             return JsonResponse({'message' : "Invalid Bookmark"}, status = 400)
 
+        except KeyError:
+            return HttpResponse(status = 400)
+
+class ApplyView(View):
+    @login_required
+    def get(self, request):  
+        try:
+            account_id = request.user.id
+            account = Account.objects.get(id = account_id)
+
+            data = {
+                'name'  : account.username,
+                'email' : account.email,
+                'phone' : account.phone,
+                'resume' : [{
+                    'id'         : resume.id,
+                    'title'      : resume.title,
+                    'updated_at' : resume.updated_at
+                } for resume in account.resume_set.all()]
+            }
+            return JsonResponse({'data' : data}, status=200)
+        
+        except KeyError:
+            return HttpResponse(status = 400)
+    
+    @login_required
+    def post(self, request):  
+        try:
+            account_id = request.user.id
+            job_id     = request.GET.get('job_id', None)
+            resume_id  = request.GET.get('resume_id', None)
+
+            Apply.objects.create(
+                account_id = account_id,
+                job_id     = job_id,
+                resume_id  = resume_id,
+                is_apply   = True
+            )
+
+            return HttpResponse(status = 200)
         except KeyError:
             return HttpResponse(status = 400)

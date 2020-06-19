@@ -17,7 +17,7 @@ class Account(models.Model):
 class Profile(models.Model):
     main_category = models.ForeignKey('job.MainCategory', on_delete=models.SET_NULL, null=True)
     sub_category  = models.ForeignKey('job.SubCategory', on_delete=models.SET_NULL, null=True)
-    career        = models.OneToOneField('Career', on_delete=models.SET_NULL, null=True)
+    career        = models.ForeignKey('Career', on_delete=models.SET_NULL, null=True)
 
     class Meta:
         db_table = 'profiles'
@@ -30,7 +30,7 @@ class Career(models.Model):
 
 class Skill(models.Model):
     name    = models.CharField(max_length = 200, null = True)
-    profile = models.ForeignKey(Profile, on_delete = models.SET_NULL, null = True)
-    
+    profile  = models.ForeignKey('Profile', on_delete=models.SET_NULL, null=True)
+
     class Meta:
         db_table = 'skills'

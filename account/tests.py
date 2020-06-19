@@ -19,8 +19,7 @@ class EmailCheckTest(TestCase):
         client = Client()
         account  = {'email' : 'qwer@qwer.com'}
         response = client.post('/account/emailcheck',json.dumps(account), content_type='applications/json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(),{'message':'ALREADY_EXIST'})
+        self.assertEqual(response.status_code, 200)
     
     def test_emailcheck_create(self):
         client = Client()
