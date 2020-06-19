@@ -240,4 +240,3 @@ class MyPageApplyView(View):
             return JsonResponse({'message' : 'No applies'}, status = 400)
         except KeyError:
             return HttpResponse(status = 400)
-
